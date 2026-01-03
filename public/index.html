@@ -21,19 +21,45 @@
 
             <div class="space-y-6 flex-1">
                 
-                <div>
-                    <label class="text-xs font-bold uppercase tracking-widest text-white/40 mb-2 block">Select Platform</label>
-                    <div class="relative">
-                        <select id="platformSelect" class="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-4 text-white outline-none focus:border-blue-500/50 focus:bg-white/10 transition-all font-semibold appearance-none cursor-pointer">
-                            <option value="tiktok" class="bg-[#0f172a]">TikTok</option>
-                            <option value="github" class="bg-[#0f172a]">GitHub</option>
-                            <option value="instagram" class="bg-[#0f172a]">Instagram</option>
-                            <option value="twitter" class="bg-[#0f172a]">Twitter (X)</option>
-                            <option value="pinterest" class="bg-[#0f172a]">Pinterest</option>
-                            <option value="youtube" class="bg-[#0f172a]">YouTube</option>
-                        </select>
-                        <div class="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none text-white/50">
-                            <i class="fa-solid fa-chevron-down"></i>
+                <div class="relative z-50">
+                    <label class="text-xs font-bold uppercase tracking-widest text-white/40 mb-2 block">Platform</label>
+                    
+                    <div class="custom-select-wrapper w-full">
+                        <div class="custom-select relative w-full bg-white/5 border border-white/10 rounded-2xl cursor-pointer hover:bg-white/10 transition-all group" id="platformTrigger">
+                            
+                            <div class="p-4 flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <div id="selectedIcon" class="w-8 h-8 rounded-full bg-black/20 flex items-center justify-center text-white">
+                                        <i class="fa-brands fa-tiktok"></i>
+                                    </div>
+                                    <span id="selectedText" class="font-bold text-white">TikTok</span>
+                                </div>
+                                <i class="fa-solid fa-chevron-down text-white/30 transition-transform duration-300 group-hover:text-white/80" id="dropdownArrow"></i>
+                            </div>
+
+                            <div class="options-container absolute top-full left-0 w-full mt-2 bg-[#0f172a] border border-white/10 rounded-2xl overflow-hidden shadow-2xl opacity-0 invisible transform -translate-y-2 transition-all duration-300" id="platformOptions">
+                                <div class="option p-4 hover:bg-white/10 flex items-center gap-3 transition-colors border-b border-white/5" data-value="tiktok" data-icon="fa-tiktok">
+                                    <i class="fa-brands fa-tiktok w-6 text-center"></i> <span>TikTok</span>
+                                </div>
+                                <div class="option p-4 hover:bg-white/10 flex items-center gap-3 transition-colors border-b border-white/5" data-value="roblox" data-icon="fa-gamepad">
+                                    <i class="fa-solid fa-gamepad w-6 text-center text-red-500"></i> <span>Roblox</span>
+                                </div>
+                                <div class="option p-4 hover:bg-white/10 flex items-center gap-3 transition-colors border-b border-white/5" data-value="github" data-icon="fa-github">
+                                    <i class="fa-brands fa-github w-6 text-center"></i> <span>GitHub</span>
+                                </div>
+                                <div class="option p-4 hover:bg-white/10 flex items-center gap-3 transition-colors border-b border-white/5" data-value="instagram" data-icon="fa-instagram">
+                                    <i class="fa-brands fa-instagram w-6 text-center text-pink-500"></i> <span>Instagram</span>
+                                </div>
+                                <div class="option p-4 hover:bg-white/10 flex items-center gap-3 transition-colors border-b border-white/5" data-value="twitter" data-icon="fa-twitter">
+                                    <i class="fa-brands fa-twitter w-6 text-center text-blue-400"></i> <span>Twitter (X)</span>
+                                </div>
+                                <div class="option p-4 hover:bg-white/10 flex items-center gap-3 transition-colors border-b border-white/5" data-value="pinterest" data-icon="fa-pinterest">
+                                    <i class="fa-brands fa-pinterest w-6 text-center text-red-600"></i> <span>Pinterest</span>
+                                </div>
+                                <div class="option p-4 hover:bg-white/10 flex items-center gap-3 transition-colors" data-value="youtube" data-icon="fa-youtube">
+                                    <i class="fa-brands fa-youtube w-6 text-center text-red-500"></i> <span>YouTube</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -53,7 +79,7 @@
                 <div class="p-4 rounded-2xl bg-white/5 border border-white/10">
                     <h3 class="text-white/60 text-xs font-bold uppercase mb-2">Capabilities</h3>
                     <ul class="text-white/40 text-sm space-y-2" id="capabilityList">
-                        </ul>
+                    </ul>
                 </div>
             </div>
 
@@ -105,15 +131,15 @@
                     <div class="grid grid-cols-3 gap-3 mt-8">
                         <div class="bg-white/5 rounded-2xl p-3 text-center border border-white/5">
                             <p id="valStat1" class="text-lg font-bold text-white">0</p>
-                            <p id="lblStat1" class="text-[10px] uppercase tracking-wider text-white/40">Followers</p>
+                            <p id="lblStat1" class="text-[10px] uppercase tracking-wider text-white/40">Stat 1</p>
                         </div>
                         <div class="bg-white/5 rounded-2xl p-3 text-center border border-white/5">
                             <p id="valStat2" class="text-lg font-bold text-white">0</p>
-                            <p id="lblStat2" class="text-[10px] uppercase tracking-wider text-white/40">Following</p>
+                            <p id="lblStat2" class="text-[10px] uppercase tracking-wider text-white/40">Stat 2</p>
                         </div>
                         <div class="bg-white/5 rounded-2xl p-3 text-center border border-white/5">
                             <p id="valStat3" class="text-lg font-bold text-white">0</p>
-                            <p id="lblStat3" class="text-[10px] uppercase tracking-wider text-white/40">Likes</p>
+                            <p id="lblStat3" class="text-[10px] uppercase tracking-wider text-white/40">Stat 3</p>
                         </div>
                     </div>
 
