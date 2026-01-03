@@ -46,15 +46,15 @@ async function githubStalk(user) {
     const { data } = await axios.get("https://api.github.com/users/" + user);
     return {
       username: data.login,
-      nickname: data.name,
-      bio: data.bio,
+      nickname: data.name || data.login, // Fallback
+      bio: data.bio || "No bio",
       profile_pic: data.avatar_url,
       url: data.html_url,
-      location: data.location,
+      location: data.location || "Unknown",
       stats: {
-        followers: data.followers,
-        following: data.following,
-        repos: data.public_repos
+        followers: data.followers || 0,
+        following: data.following || 0,
+        repos: data.public_repos || 0
       }
     };
   } catch (error) {
@@ -67,7 +67,7 @@ async function instagramStalk(username) {
     const jar = new CookieJar();
     const client = wrapper(axios.create({ jar, withCredentials: true }));
     
-    // Note: Cookies IG sering expired, idealnya ini di rotate atau pake session valid
+    // Cookie perlu diganti berkala jika expired
     const igCookie = "csrftoken=osAtGItPXdetQOXtk2IlfZ; datr=ygJMaBFtokCgDHvSHpjRBiXR; ig_did=4AFB2614-B27A-463C-88D7-634A167A23D1; wd=1920x1080; mid=aEwCygALAAHnO0uXycs4-HkvZeZG;"; 
 
     try {
@@ -82,17 +82,23 @@ async function instagramStalk(username) {
                 }
             }
         );
+        
+        // Safety check untuk response structure
+        if(!response.data || !response.data.data || !response.data.data.user) {
+            throw new Error("User structure not found");
+        }
+
         const user = response.data.data.user;
         return {
             username: user.username,
-            nickname: user.full_name,
-            bio: user.biography,
+            nickname: user.full_name || user.username,
+            bio: user.biography || "",
             profile_pic: user.profile_pic_url,
             is_verified: user.is_verified,
             stats: {
-                followers: user.edge_followed_by.count,
-                following: user.edge_follow.count,
-                posts: user.edge_owner_to_timeline_media.count
+                followers: user.edge_followed_by?.count || 0,
+                following: user.edge_follow?.count || 0,
+                posts: user.edge_owner_to_timeline_media?.count || 0
             }
         };
     } catch (error) {
@@ -115,19 +121,19 @@ async function pinterestStalk(username) {
             headers: { "User-Agent": "Postify/1.0.0" }
         });
 
-        if (!data.resource_response.data) throw new Error("User not found");
+        if (!data.resource_response?.data) throw new Error("User not found");
         const user = data.resource_response.data;
         
         return {
             username: user.username,
-            nickname: user.full_name,
-            bio: user.about,
+            nickname: user.full_name || user.username,
+            bio: user.about || "",
             profile_pic: user.image_xlarge_url,
             is_verified: user.verified_identity,
             stats: {
-                followers: user.follower_count,
-                following: user.following_count,
-                pins: user.pin_count
+                followers: user.follower_count || 0,
+                following: user.following_count || 0,
+                pins: user.pin_count || 0
             }
         };
     } catch (error) {
@@ -149,19 +155,21 @@ async function twitterStalk(username) {
             }
         );
         
+        if (!response.data?.data?.user?.result) throw new Error("Twitter user not found");
+        
         const userData = response.data.data.user.result;
         const legacy = userData.legacy;
         
         return {
             username: legacy.screen_name,
-            nickname: legacy.name,
-            bio: legacy.description,
-            profile_pic: legacy.profile_image_url_https.replace("_normal", "_400x400"),
+            nickname: legacy.name || legacy.screen_name,
+            bio: legacy.description || "",
+            profile_pic: legacy.profile_image_url_https ? legacy.profile_image_url_https.replace("_normal", "_400x400") : "",
             is_verified: userData.is_blue_verified,
             stats: {
-                followers: legacy.followers_count,
-                following: legacy.friends_count,
-                tweets: legacy.statuses_count
+                followers: legacy.followers_count || 0,
+                following: legacy.friends_count || 0,
+                tweets: legacy.statuses_count || 0
             }
         };
     } catch (error) {
@@ -175,6 +183,8 @@ async function youtubeStalk(username) {
         const response = await needle('get', `https://youtube.com/@${username}`, { follow_max: 5 });
         const $ = cheerio.load(response.body);
         const script = $('script').filter((i, el) => $(el).html().includes('var ytInitialData =')).html();
+        if(!script) throw new Error("Script not found");
+
         const json = JSON.parse(script.match(/var ytInitialData = (.*?);/)[1]);
         
         const header = json.header?.pageHeaderRenderer?.content?.pageHeaderViewModel;
@@ -194,9 +204,9 @@ async function youtubeStalk(username) {
 
         return {
             username: header?.title?.content || username,
-            nickname: header?.title?.content,
+            nickname: header?.title?.content || username,
             bio: header?.metadata?.contentMetadataViewModel?.metadataRows[0]?.metadataParts[0]?.text?.content || "Youtube Channel",
-            profile_pic: header?.image?.decoratedAvatarViewModel?.avatar?.avatarViewModel?.image?.sources[0]?.url,
+            profile_pic: header?.image?.decoratedAvatarViewModel?.avatar?.avatarViewModel?.image?.sources[0]?.url || "",
             is_verified: true, // simplified
             stats: {
                 subscribers: subCount,
