@@ -22,26 +22,19 @@
             <div class="space-y-6 flex-1">
                 
                 <div>
-                    <label class="text-xs font-bold uppercase tracking-widest text-white/40 mb-2 block">Platform</label>
-                    <div class="grid grid-cols-3 gap-2">
-                        <button onclick="selectPlatform('tiktok')" class="platform-btn active p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all flex justify-center items-center text-xl" data-value="tiktok">
-                            <i class="fa-brands fa-tiktok"></i>
-                        </button>
-                        <button onclick="selectPlatform('github')" class="platform-btn p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all flex justify-center items-center text-xl" data-value="github">
-                            <i class="fa-brands fa-github"></i>
-                        </button>
-                        <button onclick="selectPlatform('instagram')" class="platform-btn p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all flex justify-center items-center text-xl" data-value="instagram">
-                            <i class="fa-brands fa-instagram"></i>
-                        </button>
-                        <button onclick="selectPlatform('twitter')" class="platform-btn p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all flex justify-center items-center text-xl" data-value="twitter">
-                            <i class="fa-brands fa-twitter"></i>
-                        </button>
-                        <button onclick="selectPlatform('pinterest')" class="platform-btn p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all flex justify-center items-center text-xl" data-value="pinterest">
-                            <i class="fa-brands fa-pinterest"></i>
-                        </button>
-                        <button onclick="selectPlatform('youtube')" class="platform-btn p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all flex justify-center items-center text-xl" data-value="youtube">
-                            <i class="fa-brands fa-youtube"></i>
-                        </button>
+                    <label class="text-xs font-bold uppercase tracking-widest text-white/40 mb-2 block">Select Platform</label>
+                    <div class="relative">
+                        <select id="platformSelect" class="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-4 text-white outline-none focus:border-blue-500/50 focus:bg-white/10 transition-all font-semibold appearance-none cursor-pointer">
+                            <option value="tiktok" class="bg-[#0f172a]">TikTok</option>
+                            <option value="github" class="bg-[#0f172a]">GitHub</option>
+                            <option value="instagram" class="bg-[#0f172a]">Instagram</option>
+                            <option value="twitter" class="bg-[#0f172a]">Twitter (X)</option>
+                            <option value="pinterest" class="bg-[#0f172a]">Pinterest</option>
+                            <option value="youtube" class="bg-[#0f172a]">YouTube</option>
+                        </select>
+                        <div class="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none text-white/50">
+                            <i class="fa-solid fa-chevron-down"></i>
+                        </div>
                     </div>
                 </div>
 
@@ -144,12 +137,5 @@
     </div>
 
     <script src="script.js"></script>
-    <style>
-        .platform-btn.active {
-            background-color: white;
-            color: black;
-            transform: scale(1.05);
-        }
-    </style>
 </body>
 </html>
