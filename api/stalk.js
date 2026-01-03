@@ -4,53 +4,165 @@ import needle from "needle";
 import { CookieJar } from "tough-cookie";
 import { wrapper } from "axios-cookiejar-support";
 
-// 1. TikTok
-async function tiktokStalk(user) {
-  try {
-    const url = `https://tiktok.com/@${user}`;
-    const response = await axios.get(url, {
-      headers: {
-        "User-Agent": "PostmanRuntime/7.32.2",
-        "Accept-Encoding": "gzip, deflate, br",
-      },
-      timeout: 10000,
-    });
-    const html = response.data;
-    const $ = cheerio.load(html);
-    const data = $("#__UNIVERSAL_DATA_FOR_REHYDRATION__").text();
-    if (data) {
-        const result = JSON.parse(data);
-        if (result["__DEFAULT_SCOPE__"]["webapp.user-detail"].statusCode !== 0) {
-            throw new Error("User not found!");
-        }
-        return result["__DEFAULT_SCOPE__"]["webapp.user-detail"]["userInfo"];
-    } else {
-        const scriptData = $('script#SIGI_STATE').text();
-        if(scriptData) {
-            const json = JSON.parse(scriptData);
-            if(!json.UserModule) throw new Error("User not found");
-            const userInfo = json.UserModule.users[user];
-            const stats = json.UserModule.stats[user];
-            return { ...userInfo, stats };
-        }
-        throw new Error("Data not found");
+class RobloxAPI {
+  constructor() {
+    this.baseUrl = "https://api.roblox.com";
+  }
+
+  async request(url, method = "GET", data = null, timeout = 10000) {
+    try {
+      const config = { method, url, timeout };
+      if (data) config.data = data;
+      const finalUrl = url.startsWith("http") ? url : this.baseUrl + url;
+      config.url = finalUrl;
+      const response = await axios(config);
+      return response.data;
+    } catch (error) {
+      return null;
     }
-  } catch (err) {
-    throw new Error(err.message || err);
+  }
+
+  async getUserIdFromUsername(username) {
+    const data = await this.request("https://users.roblox.com/v1/usernames/users", "POST", {
+      usernames: [username],
+      excludeBannedUsers: false,
+    });
+    return data?.data?.[0]?.id || null;
+  }
+
+  async getUserInfo(userId) {
+    return await this.request(`https://users.roblox.com/v1/users/${userId}`);
+  }
+
+  async getUserFriendsCount(userId) {
+    return await this.request(`https://friends.roblox.com/v1/users/${userId}/friends/count`);
+  }
+
+  async getUserFollowersCount(userId) {
+    return await this.request(`https://friends.roblox.com/v1/users/${userId}/followers/count`);
+  }
+
+  async getUserFollowingCount(userId) {
+    return await this.request(`https://friends.roblox.com/v1/users/${userId}/followings/count`);
+  }
+
+  async getUserAvatarHeadshot(userId, size = "420x420", format = "Png") {
+    const res = await this.request(`https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=${userId}&size=${size}&format=${format}&isCircular=false`);
+    return res?.data?.[0]?.imageUrl || null;
+  }
+
+  async getCompleteUserInfo(username) {
+    const userId = await this.getUserIdFromUsername(username);
+    if (!userId) throw new Error("Roblox User not found");
+
+    const [
+      basic,
+      friendsCount,
+      followersCount,
+      followingCount,
+      headshot
+    ] = await Promise.all([
+      this.getUserInfo(userId),
+      this.getUserFriendsCount(userId),
+      this.getUserFollowersCount(userId),
+      this.getUserFollowingCount(userId),
+      this.getUserAvatarHeadshot(userId)
+    ]);
+
+    return {
+      id: userId,
+      username: basic.name,
+      nickname: basic.displayName,
+      bio: basic.description,
+      created: basic.created,
+      profile_pic: headshot,
+      stats: {
+        friends: friendsCount?.count || 0,
+        followers: followersCount?.count || 0,
+        following: followingCount?.count || 0
+      },
+      url: `https://www.roblox.com/users/${userId}/profile`
+    };
   }
 }
 
-// 2. GitHub
+const Roblox = new RobloxAPI();
+
+async function tiktokStalk(user) {
+  try {
+    const url = `https://www.tiktok.com/@${user}`;
+    const response = await axios.get(url, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+        "Referer": "https://www.tiktok.com/"
+      },
+      timeout: 10000,
+    });
+    
+    const html = response.data;
+    const $ = cheerio.load(html);
+    
+    const dataScript = $("#__UNIVERSAL_DATA_FOR_REHYDRATION__").text();
+    if (dataScript) {
+        const json = JSON.parse(dataScript);
+        const defaultScope = json["__DEFAULT_SCOPE__"];
+        const userDetail = defaultScope?.["webapp.user-detail"];
+        
+        if (userDetail?.statusCode === 0 && userDetail?.userInfo) {
+            const u = userDetail.userInfo;
+            return {
+                uniqueId: u.user.uniqueId,
+                nickname: u.user.nickname,
+                avatarLarger: u.user.avatarLarger,
+                signature: u.user.signature,
+                verified: u.user.verified,
+                stats: {
+                    followerCount: u.stats.followerCount,
+                    followingCount: u.stats.followingCount,
+                    heartCount: u.stats.heartCount
+                }
+            };
+        }
+    }
+
+    const sigiScript = $('script#SIGI_STATE').text();
+    if (sigiScript) {
+        const json = JSON.parse(sigiScript);
+        const userModule = json.UserModule;
+        if (userModule && userModule.users && userModule.users[user]) {
+            const u = userModule.users[user];
+            const s = userModule.stats[user];
+            return {
+                uniqueId: u.uniqueId,
+                nickname: u.nickname,
+                avatarLarger: u.avatarLarger,
+                signature: u.signature,
+                verified: u.verified,
+                stats: {
+                    followerCount: s.followerCount,
+                    followingCount: s.followingCount,
+                    heartCount: s.heartCount
+                }
+            };
+        }
+    }
+    
+    throw new Error("User data not found in page");
+  } catch (err) {
+    throw new Error(err.message || "TikTok User not found");
+  }
+}
+
 async function githubStalk(user) {
   try {
     const { data } = await axios.get("https://api.github.com/users/" + user);
     return {
       username: data.login,
-      nickname: data.name || data.login, // Fallback
+      nickname: data.name || data.login,
       bio: data.bio || "No bio",
       profile_pic: data.avatar_url,
       url: data.html_url,
-      location: data.location || "Unknown",
       stats: {
         followers: data.followers || 0,
         following: data.following || 0,
@@ -58,16 +170,13 @@ async function githubStalk(user) {
       }
     };
   } catch (error) {
-    throw new Error("User not found");
+    throw new Error("GitHub user not found");
   }
 }
 
-// 3. Instagram
 async function instagramStalk(username) {
     const jar = new CookieJar();
     const client = wrapper(axios.create({ jar, withCredentials: true }));
-    
-    // Cookie perlu diganti berkala jika expired
     const igCookie = "csrftoken=osAtGItPXdetQOXtk2IlfZ; datr=ygJMaBFtokCgDHvSHpjRBiXR; ig_did=4AFB2614-B27A-463C-88D7-634A167A23D1; wd=1920x1080; mid=aEwCygALAAHnO0uXycs4-HkvZeZG;"; 
 
     try {
@@ -76,23 +185,19 @@ async function instagramStalk(username) {
             {
                 headers: {
                     authority: "www.instagram.com",
-                    "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36",
+                    "user-agent": "Mozilla/5.0 (Linux; Android 9; GM1903 Build/PKQ1.190110.001; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/75.0.3770.143 Mobile Safari/537.36 Instagram 103.1.0.15.119 Android (28/9; 420dpi; 1080x2260; OnePlus; GM1903; OnePlus7; qcom; en_US; 162830167)",
                     "x-ig-app-id": "936619743392459",
                     cookie: igCookie
                 }
             }
         );
-        
-        // Safety check untuk response structure
-        if(!response.data || !response.data.data || !response.data.data.user) {
-            throw new Error("User structure not found");
-        }
+        const user = response.data?.data?.user;
+        if (!user) throw new Error("No user data");
 
-        const user = response.data.data.user;
         return {
             username: user.username,
             nickname: user.full_name || user.username,
-            bio: user.biography || "",
+            bio: user.biography,
             profile_pic: user.profile_pic_url,
             is_verified: user.is_verified,
             stats: {
@@ -102,11 +207,10 @@ async function instagramStalk(username) {
             }
         };
     } catch (error) {
-        throw new Error("Instagram Profile not found or Cookie Invalid");
+        throw new Error("Instagram Profile not found");
     }
 }
 
-// 4. Pinterest
 async function pinterestStalk(username) {
     try {
         const { data } = await axios.get("https://www.pinterest.com/resource/UserResource/get/", {
@@ -127,7 +231,7 @@ async function pinterestStalk(username) {
         return {
             username: user.username,
             nickname: user.full_name || user.username,
-            bio: user.about || "",
+            bio: user.about,
             profile_pic: user.image_xlarge_url,
             is_verified: user.verified_identity,
             stats: {
@@ -137,11 +241,10 @@ async function pinterestStalk(username) {
             }
         };
     } catch (error) {
-        throw new Error("User not found");
+        throw new Error("Pinterest User not found");
     }
 }
 
-// 5. Twitter (X)
 async function twitterStalk(username) {
     try {
         const response = await axios.get(
@@ -155,21 +258,20 @@ async function twitterStalk(username) {
             }
         );
         
-        if (!response.data?.data?.user?.result) throw new Error("Twitter user not found");
-        
-        const userData = response.data.data.user.result;
+        const userData = response.data?.data?.user?.result;
+        if (!userData) throw new Error("No data");
         const legacy = userData.legacy;
         
         return {
             username: legacy.screen_name,
-            nickname: legacy.name || legacy.screen_name,
-            bio: legacy.description || "",
-            profile_pic: legacy.profile_image_url_https ? legacy.profile_image_url_https.replace("_normal", "_400x400") : "",
+            nickname: legacy.name,
+            bio: legacy.description,
+            profile_pic: legacy.profile_image_url_https?.replace("_normal", "_400x400"),
             is_verified: userData.is_blue_verified,
             stats: {
-                followers: legacy.followers_count || 0,
-                following: legacy.friends_count || 0,
-                tweets: legacy.statuses_count || 0
+                followers: legacy.followers_count,
+                following: legacy.friends_count,
+                tweets: legacy.statuses_count
             }
         };
     } catch (error) {
@@ -177,14 +279,12 @@ async function twitterStalk(username) {
     }
 }
 
-// 6. YouTube
 async function youtubeStalk(username) {
     try {
         const response = await needle('get', `https://youtube.com/@${username}`, { follow_max: 5 });
         const $ = cheerio.load(response.body);
         const script = $('script').filter((i, el) => $(el).html().includes('var ytInitialData =')).html();
-        if(!script) throw new Error("Script not found");
-
+        if(!script) throw new Error("Script missing");
         const json = JSON.parse(script.match(/var ytInitialData = (.*?);/)[1]);
         
         const header = json.header?.pageHeaderRenderer?.content?.pageHeaderViewModel;
@@ -204,10 +304,10 @@ async function youtubeStalk(username) {
 
         return {
             username: header?.title?.content || username,
-            nickname: header?.title?.content || username,
+            nickname: header?.title?.content,
             bio: header?.metadata?.contentMetadataViewModel?.metadataRows[0]?.metadataParts[0]?.text?.content || "Youtube Channel",
-            profile_pic: header?.image?.decoratedAvatarViewModel?.avatar?.avatarViewModel?.image?.sources[0]?.url || "",
-            is_verified: true, // simplified
+            profile_pic: header?.image?.decoratedAvatarViewModel?.avatar?.avatarViewModel?.image?.sources[0]?.url,
+            is_verified: true, 
             stats: {
                 subscribers: subCount,
                 videos: vidCount,
@@ -219,8 +319,13 @@ async function youtubeStalk(username) {
     }
 }
 
-
-// --- MAIN HANDLER ---
+async function robloxStalk(user) {
+    try {
+        return await Roblox.getCompleteUserInfo(user);
+    } catch (e) {
+        throw new Error(e.message || "Roblox user not found");
+    }
+}
 
 export default async function handler(req, res) {
   const { username, type = "tiktok" } = req.query;
@@ -240,6 +345,7 @@ export default async function handler(req, res) {
         case 'pinterest': result = await pinterestStalk(cleanUser); break;
         case 'twitter': result = await twitterStalk(cleanUser); break;
         case 'youtube': result = await youtubeStalk(cleanUser); break;
+        case 'roblox': result = await robloxStalk(cleanUser); break;
         default: throw new Error("Platform not supported");
     }
 
