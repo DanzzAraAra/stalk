@@ -1,8 +1,13 @@
 const stalkBtn = document.getElementById('stalkBtn');
 const usernameInput = document.getElementById('usernameInput');
+const platformSelect = document.getElementById('platformSelect'); // Element Baru
 const loaderArea = document.getElementById('loaderArea');
 const emptyState = document.getElementById('emptyState');
 const resultArea = document.getElementById('resultArea');
+
+// Default placeholder avatar
+const DEFAULT_AVATAR = 'https://ui-avatars.com/api/?background=random&color=fff&name=User';
+
 let currentPlatform = 'tiktok';
 
 const platformConfig = {
@@ -11,15 +16,17 @@ const platformConfig = {
         stats: ['Followers', 'Following', 'Likes'],
         tips: 'Profile Pic HD, Follower Stats, Bio',
         map: (d) => ({
-            avatar: d.avatarLarger || d.avatarMedium,
-            name: d.nickname,
-            username: d.uniqueId,
-            bio: d.signature,
+            // Fallback: Jika avatarLarger tidak ada, coba avatarMedium, lalu default
+            avatar: d.avatarLarger || d.avatarMedium || DEFAULT_AVATAR,
+            // Fallback: Jika nickname kosong, pakai uniqueId
+            name: d.nickname || d.uniqueId || 'TikTok User',
+            username: d.uniqueId || '-',
+            bio: d.signature || 'No bio available.',
             link: `https://tiktok.com/@${d.uniqueId}`,
-            verified: d.verified,
-            s1: d.stats.followerCount,
-            s2: d.stats.followingCount,
-            s3: d.stats.heartCount
+            verified: d.verified || false,
+            s1: d.stats?.followerCount || 0,
+            s2: d.stats?.followingCount || 0,
+            s3: d.stats?.heartCount || 0
         })
     },
     github: {
@@ -27,15 +34,15 @@ const platformConfig = {
         stats: ['Followers', 'Following', 'Repos'],
         tips: 'Public Repos, Bio, Company',
         map: (d) => ({
-            avatar: d.profile_pic,
-            name: d.nickname || d.username,
-            username: d.username,
-            bio: d.bio,
-            link: d.url,
+            avatar: d.profile_pic || DEFAULT_AVATAR,
+            name: d.nickname || d.username || 'GitHub User',
+            username: d.username || '-',
+            bio: d.bio || 'No bio available.',
+            link: d.url || '#',
             verified: false,
-            s1: d.stats.followers,
-            s2: d.stats.following,
-            s3: d.stats.repos
+            s1: d.stats?.followers || 0,
+            s2: d.stats?.following || 0,
+            s3: d.stats?.repos || 0
         })
     },
     instagram: {
@@ -43,15 +50,15 @@ const platformConfig = {
         stats: ['Followers', 'Following', 'Posts'],
         tips: 'Posts Count, Bio, Verified Status',
         map: (d) => ({
-            avatar: d.profile_pic,
-            name: d.nickname,
-            username: d.username,
-            bio: d.bio,
+            avatar: d.profile_pic || DEFAULT_AVATAR,
+            name: d.nickname || d.username || 'Instagram User',
+            username: d.username || '-',
+            bio: d.bio || 'No bio available.',
             link: `https://instagram.com/${d.username}`,
-            verified: d.is_verified,
-            s1: d.stats.followers,
-            s2: d.stats.following,
-            s3: d.stats.posts
+            verified: d.is_verified || false,
+            s1: d.stats?.followers || 0,
+            s2: d.stats?.following || 0,
+            s3: d.stats?.posts || 0
         })
     },
     twitter: {
@@ -59,15 +66,15 @@ const platformConfig = {
         stats: ['Followers', 'Following', 'Tweets'],
         tips: 'Tweets Count, Verified Status, Bio',
         map: (d) => ({
-            avatar: d.profile_pic,
-            name: d.nickname,
-            username: d.username,
-            bio: d.bio,
+            avatar: d.profile_pic || DEFAULT_AVATAR,
+            name: d.nickname || d.username || 'Twitter User',
+            username: d.username || '-',
+            bio: d.bio || 'No bio available.',
             link: `https://x.com/${d.username}`,
-            verified: d.is_verified,
-            s1: d.stats.followers,
-            s2: d.stats.following,
-            s3: d.stats.tweets
+            verified: d.is_verified || false,
+            s1: d.stats?.followers || 0,
+            s2: d.stats?.following || 0,
+            s3: d.stats?.tweets || 0
         })
     },
     pinterest: {
@@ -75,15 +82,15 @@ const platformConfig = {
         stats: ['Followers', 'Following', 'Pins'],
         tips: 'Saved Pins, Boards, Bio',
         map: (d) => ({
-            avatar: d.profile_pic,
-            name: d.nickname,
-            username: d.username,
-            bio: d.bio,
+            avatar: d.profile_pic || DEFAULT_AVATAR,
+            name: d.nickname || d.username || 'Pinterest User',
+            username: d.username || '-',
+            bio: d.bio || 'No bio available.',
             link: `https://pinterest.com/${d.username}`,
-            verified: d.is_verified,
-            s1: d.stats.followers,
-            s2: d.stats.following,
-            s3: d.stats.pins
+            verified: d.is_verified || false,
+            s1: d.stats?.followers || 0,
+            s2: d.stats?.following || 0,
+            s3: d.stats?.pins || 0
         })
     },
     youtube: {
@@ -91,15 +98,15 @@ const platformConfig = {
         stats: ['Subs', 'Videos', 'Views'],
         tips: 'Subscribers, Video Count, Channel Art',
         map: (d) => ({
-            avatar: d.profile_pic,
-            name: d.nickname,
-            username: d.username,
-            bio: d.bio,
+            avatar: d.profile_pic || DEFAULT_AVATAR,
+            name: d.nickname || d.username || 'YouTuber',
+            username: d.username || 'Channel',
+            bio: d.bio || 'No description.',
             link: `https://youtube.com/@${d.username}`,
             verified: true,
-            s1: d.stats.subscribers,
-            s2: d.stats.videos,
-            s3: d.stats.views
+            s1: d.stats?.subscribers || '0',
+            s2: d.stats?.videos || '0',
+            s3: d.stats?.views || '0'
         })
     }
 };
@@ -107,29 +114,30 @@ const platformConfig = {
 // UI Functions
 function formatNumber(num) {
     if (!num) return '0';
-    if (isNaN(num)) return num; // Return string as is (e.g. "1.2M")
+    if (typeof num === 'string') {
+        // Jika sudah string (misal dari YouTube "1.2M"), kembalikan saja
+        return num.length > 10 ? num.substring(0, 10) + '..' : num;
+    }
     if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
     if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
     return num;
 }
 
-function selectPlatform(platform) {
+function updatePlatformInfo(platform) {
     currentPlatform = platform;
-    
-    // Update Active Button
-    document.querySelectorAll('.platform-btn').forEach(btn => {
-        if(btn.dataset.value === platform) btn.classList.add('active');
-        else btn.classList.remove('active');
-    });
-
-    // Update Tips & Labels
     const config = platformConfig[platform];
+    
+    // Update Tips & Labels
     const tipsHtml = `<li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-blue-400"></span> ${config.tips}</li>`;
     document.getElementById('capabilityList').innerHTML = tipsHtml;
     
-    // Reset UI
     resetUI();
 }
+
+// Listen to Select Change
+platformSelect.addEventListener('change', (e) => {
+    updatePlatformInfo(e.target.value);
+});
 
 function setLoading(isLoading) {
     if (isLoading) {
@@ -171,14 +179,15 @@ stalkBtn.onclick = async () => {
         if (!result.status) throw new Error(result.error || "User not found");
 
         const config = platformConfig[currentPlatform];
-        const data = config.map(result.data); // Normalize data
+        // Mapping data dengan logika fallback yang sudah diperbaiki
+        const data = config.map(result.data); 
 
         // Populate Data
-        document.getElementById('resAvatar').src = data.avatar || 'https://via.placeholder.com/150';
-        document.getElementById('resNickname').innerText = data.name || data.username;
+        document.getElementById('resAvatar').src = data.avatar;
+        document.getElementById('resNickname').innerText = data.name;
         document.getElementById('resUsername').innerText = '@' + data.username;
         document.getElementById('resUsername').href = data.link;
-        document.getElementById('resBio').innerText = data.bio || "No bio available.";
+        document.getElementById('resBio').innerText = data.bio;
         document.getElementById('resLink').href = data.link;
 
         // Stats
@@ -221,4 +230,4 @@ usernameInput.addEventListener("keypress", (e) => {
     }
 });
 
-selectPlatform('tiktok');
+updatePlatformInfo('tiktok');
