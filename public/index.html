@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KuroNeko</title>
+    <title>KuroNeko Stalker</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="bg-gradient-animate min-h-screen flex items-center justify-center p-4 md:p-8">
 
@@ -14,11 +15,36 @@
         
         <div class="w-full md:w-5/12 p-6 md:p-10 flex flex-col border-b md:border-b-0 md:border-r border-white/10">
             <div class="mb-8">
-                <h1 class="text-3xl font-800 mb-2 bg-gradient-to-r from-blue-400 to-pink-500 bg-clip-text text-transparent">TikTok Stalker</h1>
-                <p class="text-white/50 text-xs">Analyze public profiles</p>
+                <h1 class="text-3xl font-800 mb-2 bg-gradient-to-r from-blue-400 to-pink-500 bg-clip-text text-transparent">Social Stalker</h1>
+                <p class="text-white/50 text-xs">Analyze public profiles across platforms</p>
             </div>
 
             <div class="space-y-6 flex-1">
+                
+                <div>
+                    <label class="text-xs font-bold uppercase tracking-widest text-white/40 mb-2 block">Platform</label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <button onclick="selectPlatform('tiktok')" class="platform-btn active p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all flex justify-center items-center text-xl" data-value="tiktok">
+                            <i class="fa-brands fa-tiktok"></i>
+                        </button>
+                        <button onclick="selectPlatform('github')" class="platform-btn p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all flex justify-center items-center text-xl" data-value="github">
+                            <i class="fa-brands fa-github"></i>
+                        </button>
+                        <button onclick="selectPlatform('instagram')" class="platform-btn p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all flex justify-center items-center text-xl" data-value="instagram">
+                            <i class="fa-brands fa-instagram"></i>
+                        </button>
+                        <button onclick="selectPlatform('twitter')" class="platform-btn p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all flex justify-center items-center text-xl" data-value="twitter">
+                            <i class="fa-brands fa-twitter"></i>
+                        </button>
+                        <button onclick="selectPlatform('pinterest')" class="platform-btn p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all flex justify-center items-center text-xl" data-value="pinterest">
+                            <i class="fa-brands fa-pinterest"></i>
+                        </button>
+                        <button onclick="selectPlatform('youtube')" class="platform-btn p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all flex justify-center items-center text-xl" data-value="youtube">
+                            <i class="fa-brands fa-youtube"></i>
+                        </button>
+                    </div>
+                </div>
+
                 <div>
                     <label class="text-xs font-bold uppercase tracking-widest text-white/40 mb-2 block">Target Username</label>
                     <div class="relative group">
@@ -27,17 +53,14 @@
                         </div>
                         <input type="text" id="usernameInput" 
                             class="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-10 pr-4 text-white outline-none focus:border-blue-500/50 focus:bg-white/10 transition-all placeholder-white/20 font-semibold" 
-                            placeholder="danzz_yyyyy" autocomplete="off">
+                            placeholder="username" autocomplete="off">
                     </div>
                 </div>
 
                 <div class="p-4 rounded-2xl bg-white/5 border border-white/10">
-                    <h3 class="text-white/60 text-xs font-bold uppercase mb-2">Features</h3>
-                    <ul class="text-white/40 text-sm space-y-2">
-                        <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-green-400"></span> Profile Picture HD</li>
-                        <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-blue-400"></span> Follower Stats</li>
-                        <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-pink-400"></span> Bio & Verify Status</li>
-                    </ul>
+                    <h3 class="text-white/60 text-xs font-bold uppercase mb-2">Capabilities</h3>
+                    <ul class="text-white/40 text-sm space-y-2" id="capabilityList">
+                        </ul>
                 </div>
             </div>
 
@@ -62,15 +85,15 @@
             
             <div id="emptyState" class="text-center">
                 <div class="w-24 h-24 mx-auto mb-6 bg-white/5 rounded-full flex items-center justify-center shimmer">
-                    <svg class="text-white/20" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                    <i class="fa-solid fa-ghost text-white/20 text-4xl"></i>
                 </div>
-                <p class="text-white/30 text-sm font-medium">Enter username</p>
+                <p class="text-white/30 text-sm font-medium">Select platform & enter username</p>
             </div>
 
             <div id="resultArea" class="hidden w-full max-w-md mx-auto transition-all duration-500 opacity-0 transform translate-y-4">
                 
                 <div class="glass-card rounded-3xl p-6 md:p-8 border border-white/20 relative overflow-hidden">
-                    <div class="absolute top-0 left-0 w-full h-32 bg-gradient-to-r from-blue-500/20 to-pink-500/20 blur-2xl"></div>
+                    <div id="bgGlow" class="absolute top-0 left-0 w-full h-32 bg-gradient-to-r from-blue-500/20 to-pink-500/20 blur-2xl"></div>
 
                     <div class="relative z-10 flex flex-col items-center text-center -mt-2">
                         <div class="relative">
@@ -81,32 +104,32 @@
                         </div>
                         
                         <h2 id="resNickname" class="mt-4 text-xl font-bold text-white">Nickname</h2>
-                        <p id="resUsername" class="text-blue-400 text-sm font-semibold">@username</p>
+                        <a id="resUsername" href="#" target="_blank" class="text-blue-400 text-sm font-semibold hover:underline">@username</a>
                         
                         <p id="resBio" class="mt-4 text-white/60 text-sm leading-relaxed line-clamp-3">Bio description...</p>
                     </div>
 
                     <div class="grid grid-cols-3 gap-3 mt-8">
                         <div class="bg-white/5 rounded-2xl p-3 text-center border border-white/5">
-                            <p id="resFollowers" class="text-lg font-bold text-white">0</p>
-                            <p class="text-[10px] uppercase tracking-wider text-white/40">Followers</p>
+                            <p id="valStat1" class="text-lg font-bold text-white">0</p>
+                            <p id="lblStat1" class="text-[10px] uppercase tracking-wider text-white/40">Followers</p>
                         </div>
                         <div class="bg-white/5 rounded-2xl p-3 text-center border border-white/5">
-                            <p id="resFollowing" class="text-lg font-bold text-white">0</p>
-                            <p class="text-[10px] uppercase tracking-wider text-white/40">Following</p>
+                            <p id="valStat2" class="text-lg font-bold text-white">0</p>
+                            <p id="lblStat2" class="text-[10px] uppercase tracking-wider text-white/40">Following</p>
                         </div>
                         <div class="bg-white/5 rounded-2xl p-3 text-center border border-white/5">
-                            <p id="resLikes" class="text-lg font-bold text-white">0</p>
-                            <p class="text-[10px] uppercase tracking-wider text-white/40">Likes</p>
+                            <p id="valStat3" class="text-lg font-bold text-white">0</p>
+                            <p id="lblStat3" class="text-[10px] uppercase tracking-wider text-white/40">Likes</p>
                         </div>
                     </div>
 
                     <div class="mt-6 flex gap-3">
                         <a id="resLink" href="#" target="_blank" class="flex-1 py-3 bg-white text-black text-sm font-bold rounded-xl text-center hover:bg-blue-400 hover:text-white transition-colors">
-                            Open in TikTok
+                            Visit Profile
                         </a>
                         <button onclick="resetUI()" class="px-4 py-3 border border-white/10 rounded-xl hover:bg-white/5 text-white/60 transition-colors">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 12"></path></svg>
+                            <i class="fa-solid fa-rotate-left"></i>
                         </button>
                     </div>
                 </div>
@@ -121,5 +144,12 @@
     </div>
 
     <script src="script.js"></script>
+    <style>
+        .platform-btn.active {
+            background-color: white;
+            color: black;
+            transform: scale(1.05);
+        }
+    </style>
 </body>
 </html>
